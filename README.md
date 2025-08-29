@@ -1,10 +1,10 @@
 # FastAPI Boilerplate
 
-Template for FastAPI backend using FastAPI and Postgres. It implements basic routes for User management (CRUD) and oAuth2 authentication.
+Template for FastAPI backend using FastAPI and Postgres. It implements basic routes for User management (CRUD) and oAuth2 authentication. You must have a Postgres server to make it work.
 
 ## Requirements
 - Python 3.13+
-- Poetry
+- Poetry 2.1.4+
 - Postgres
 
 ## Setup
@@ -20,6 +20,7 @@ DATABASE_PORT=5432
 DATABASE_USER=dbusername
 DATABASE_PASSWORD=dbpassword
 DATABASE_NAME=dbname
+ADMIN_PASSWORD=xxxxxxx
 
 # Security
 SECRET_KEY=your_secret_key_here
@@ -34,6 +35,7 @@ ENVIRONMENT=development
 ```bash
 poetry run task run
 ```
+Note: It will automatically create a table named Users, with a user 'admin' and password defined in .env.
 
 ## Run tests
 ```bash

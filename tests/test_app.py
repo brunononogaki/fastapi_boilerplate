@@ -9,6 +9,6 @@ client = TestClient(app)
 
 def test_app_online():
     client = TestClient(app)
-    response = client.get('/')
+    response = client.get('/health')
     assert response.status_code == HTTPStatus.OK
-    assert response.json() == {'message': 'API is running'}
+    assert response.json() == {'status': 'healthy'}

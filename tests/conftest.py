@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from fastapi_boilerplate.app import app
 from fastapi_boilerplate.core.database import get_session as real_get_session
-from fastapi_boilerplate.core.security import create_access_token, get_password_hash
+from fastapi_boilerplate.core.security import create_access_token
 from fastapi_boilerplate.core.settings import settings
 from fastapi_boilerplate.models.base import Base
 from fastapi_boilerplate.models.users import User
@@ -17,14 +17,13 @@ from fastapi_boilerplate.models.users import User
 def engine() -> Generator:
     database_url = settings.database_url
     if not database_url:
-        raise RuntimeError('DATABASE_* não configurado para testes')
+        raise RuntimeError('DATABASE_* not configured!')
     engine = create_engine(database_url, pool_pre_ping=True, future=True)
-    # Criar tabelas uma vez para a suíte
+
     Base.metadata.create_all(engine)
     try:
         yield engine
     finally:
-        # Não derrubamos tabelas no dev DB; em CI poderia dropar
         pass
 
 
@@ -45,26 +44,15 @@ def db_session(engine) -> Generator[Session, None, None]:
 
 
 @pytest.fixture
-def admin_user(db_session: Session) -> User:
-    """Cria um usuário admin para os testes"""
-    admin = User(
-        username='test_admin',
-        email='admin@test.com',
-        first_name='Test',
-        last_name='Admin',
-        password=get_password_hash('admin123'),
-        is_admin=True,
-    )
-    db_session.add(admin)
-    db_session.commit()
-    db_session.refresh(admin)
-    return admin
+def get_admin_user(db_session: Session) -> User:
+    """Return the default admin user"""
+    return db_session.query(User).filter(User.username == 'admin').first()
 
 
 @pytest.fixture
-def admin_token(admin_user: User) -> str:
-    """Gera um token JWT para o usuário admin"""
-    return create_access_token(data={'sub': admin_user.username, 'user_id': str(admin_user.id)})
+def admin_token(get_admin_user: User) -> str:
+    """Generate a JWT Token"""
+    return create_access_token(data={'sub': get_admin_user.username, 'user_id': str(get_admin_user.id)})
 
 
 @pytest.fixture
