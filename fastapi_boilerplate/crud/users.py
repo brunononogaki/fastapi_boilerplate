@@ -11,6 +11,30 @@ from fastapi_boilerplate.schemas.users import UserCreate, UserUpdate
 
 class UserCRUD:
     @classmethod
+    def create_admin(cls, db: Session, admin_password) -> User:
+        """
+        Create default admin user
+        """
+        password = get_password_hash(admin_password)
+        db_user = User(
+            username='admin',
+            email='admin@admin.com',
+            first_name='Admin',
+            last_name='User',
+            password=password,
+            is_admin=True,
+        )
+
+        try:
+            db.add(db_user)
+            db.commit()
+            db.refresh(db_user)
+            return db_user
+        except IntegrityError:
+            db.rollback()
+            raise ValueError('Admin account already exists')
+
+    @classmethod
     def create_user(cls, db: Session, user_create: UserCreate) -> User:
         """
         Create a new user

@@ -2,7 +2,7 @@
 
 Template for FastAPI backend using FastAPI and Postgres. It implements basic routes for User management (CRUD) and oAuth2 authentication.
 
-## Requisitos
+## Requirements
 - Python 3.13+
 - Poetry
 - Postgres

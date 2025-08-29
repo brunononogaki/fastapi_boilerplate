@@ -15,8 +15,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     """
     Dependency to get current authenticated user from JWT token
     """
-    # token = credentials.credentials
-
     # Verify token
     payload = verify_token(token)
 

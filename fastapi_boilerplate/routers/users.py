@@ -22,6 +22,17 @@ async def list_users(
     return user_crud.get_users(db, skip=skip, limit=limit)
 
 
+@router.post('/create_admin', response_model=UserOut, status_code=201)
+async def create_admin_user(
+    password: str,
+    db: Session = Depends(get_session),
+):
+    if user_crud.get_user_by_username(db, 'admin'):
+        raise HTTPException(status_code=409, detail='Admin user already exists')
+
+    return user_crud.create_admin(db, password)
+
+
 @router.post('/', response_model=UserOut, status_code=201)
 async def create_user(
     payload: UserCreate,
