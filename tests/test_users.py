@@ -27,7 +27,7 @@ def test_users_crud_flow(client: TestClient):
     r = client.get('/api/v1/users/?skip=0&limit=50')
     assert r.status_code == HTTPStatus.OK
     users = r.json()
-    assert any(u['id'] == user_id for u in users)
+    assert any(u['id'] == user_id for u in users['items'])
 
     # Get by id
     r = client.get(f'/api/v1/users/{user_id}')

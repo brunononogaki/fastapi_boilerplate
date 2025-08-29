@@ -7,19 +7,24 @@ from fastapi_boilerplate.core.auth import get_current_admin_user
 from fastapi_boilerplate.core.database import get_session
 from fastapi_boilerplate.crud.users import user_crud
 from fastapi_boilerplate.models.users import User
+from fastapi_boilerplate.schemas.pagination import PaginatedResponse
 from fastapi_boilerplate.schemas.users import UserCreate, UserOut, UserUpdate
+from fastapi_boilerplate.utils.pagination import create_paginated_response
 
 router = APIRouter(prefix='/users', tags=['users'])
 
 
-@router.get('/', response_model=list[UserOut])
+@router.get('/', response_model=PaginatedResponse[UserOut])
 async def list_users(
     db: Session = Depends(get_session),
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
     current_user: User = Depends(get_current_admin_user),
 ):
-    return user_crud.get_users(db, skip=skip, limit=limit)
+    response = user_crud.get_users(db, skip=skip, limit=limit)
+    total_count = user_crud.get_users_count(db=db)
+
+    return create_paginated_response(items=response, total_count=total_count, skip=skip, limit=limit)
 
 
 @router.post('/create_admin', response_model=UserOut, status_code=201)

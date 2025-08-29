@@ -1,7 +1,7 @@
 import uuid
 from typing import List, Optional
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -64,45 +64,35 @@ class UserCRUD:
         """
         Get user by ID
         """
-        return db.scalar(
-            select(User).where(User.id == user_id).limit(1)
-        )
+        return db.scalar(select(User).where(User.id == user_id).limit(1))
 
     @classmethod
     def get_user_by_username(cls, db: Session, username: str) -> Optional[User]:
         """
         Get user by username
         """
-        return db.scalar(
-            select(User).where(User.username == username).limit(1)
-        )
+        return db.scalar(select(User).where(User.username == username).limit(1))
 
     @classmethod
     def get_user_by_email(cls, db: Session, email: str) -> Optional[User]:
         """
         Get user by email
         """
-        return db.scalar(
-            select(User).where(User.email == email).limit(1)
-        )
+        return db.scalar(select(User).where(User.email == email).limit(1))
 
     @classmethod
     def get_users(cls, db: Session, skip: int = 0, limit: int = 100) -> List[User]:
         """
         Get list of users with pagination, ordered by username
         """
-        return db.scalars(
-            select(User).order_by(User.username).offset(skip).limit(limit)
-        )
+        return db.scalars(select(User).order_by(User.username).offset(skip).limit(limit))
 
     @classmethod
     def get_users_count(cls, db: Session) -> int:
         """
         Get total count of Users
         """
-        return db.scalar(
-            select(User).count()
-        )
+        return db.scalar(select(func.count()).select_from(User))
 
     @classmethod
     def update_user(cls, db: Session, user_id: uuid.UUID, user_update: UserUpdate) -> Optional[User]:

@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     database_user: Optional[str] = None
     database_password: Optional[str] = None
     database_name: Optional[str] = None
+    test_database_name: Optional[str] = None
 
     # Security settings
     secret_key: str = 'your-secret-key-here-change-in-production'
@@ -46,6 +47,21 @@ class Settings(BaseSettings):
         return (
             f'postgresql+psycopg://{self.database_user}:{self.database_password}'
             f'@{self.database_host}:{self.database_port}/{self.database_name}'
+        )
+
+    @property
+    def test_database_url(self) -> Optional[str]:
+        if not all([
+            self.database_host,
+            self.database_port,
+            self.database_user,
+            self.database_password,
+            self.database_name,
+        ]):
+            return None
+        return (
+            f'postgresql+psycopg://{self.database_user}:{self.database_password}'
+            f'@{self.database_host}:{self.database_port}/{self.test_database_name}'
         )
 
 

@@ -16,7 +16,7 @@ from fastapi_boilerplate.models.users import User
 
 @pytest.fixture
 def db_session():
-    database_url = settings.database_url
+    database_url = settings.test_database_url
 
     engine = create_engine(database_url)
 
