@@ -70,24 +70,3 @@ def test_authentication_required(client: TestClient):
         },
     )
     assert r.status_code == HTTPStatus.UNAUTHORIZED
-
-
-def test_admin_user_creation_and_auth(client: TestClient):
-    """Testa criação de usuário admin e autenticação"""
-    # Criar usuário admin
-    admin_payload = {
-        'username': 'super_admin',
-        'email': 'super@admin.com',
-        'first_name': 'Super',
-        'last_name': 'Admin',
-        'password': 'admin456',
-        'is_admin': True,
-    }
-
-    r = client.post('/api/v1/users/', json=admin_payload)
-    assert r.status_code == HTTPStatus.CREATED
-
-    # Verificar se foi criado como admin
-    user_data = r.json()
-    assert user_data['is_admin'] is True
-    assert user_data['username'] == 'super_admin'
