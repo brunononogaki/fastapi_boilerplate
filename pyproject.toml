@@ -46,6 +46,9 @@ pythonpath = "."
 addopts = '-p no:warnings'
 asyncio_default_fixture_loop_scope = 'function'
 
+[tool.coverage.run]
+concurrency = ['thread', 'greenlet']
+
 [tool.taskipy.tasks]
 lint = 'ruff check'
 pre_format = 'ruff check --fix'
