@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from fastapi_boilerplate.app import app
+from fastapi_boilerplate.core.database import get_session
 from fastapi_boilerplate.core.security import create_access_token
 from fastapi_boilerplate.core.settings import settings
 from fastapi_boilerplate.crud.users import user_crud
@@ -13,16 +14,21 @@ from fastapi_boilerplate.models.users import User
 
 @pytest_asyncio.fixture
 async def db_session():
-    database_url = settings.test_database_url
+    engine = create_async_engine(settings.database_url_test)
 
-    engine = create_async_engine(database_url)
+    # Drop Database when starting the tests
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
 
+    # Create tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    async with AsyncSession(engine) as session:
+
+    # Create Session and return
+    async with AsyncSession(engine, expire_on_commit=False) as session:
         yield session
+
+    # Drop Database after finishing the tests
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
 
@@ -32,7 +38,7 @@ async def admin_user(db_session: AsyncSession) -> User:
     """Create the default admin user"""
     await user_crud.create_admin(db_session, settings.admin_password)
     result = await db_session.execute(select(User).filter_by(username='admin'))
-    admin = result.scalar_one_or_none()
+    admin = result.scalar()
     return admin
 
 
@@ -43,9 +49,11 @@ async def admin_token(admin_user: User) -> str:
 
 
 @pytest_asyncio.fixture
-async def client(admin_token: str):
+async def client(db_session: AsyncSession, admin_token: str):
     """Create a TestClient with authenticated headers"""
+
+    # Override session to use the Test DB
+    app.dependency_overrides[get_session] = lambda: db_session
     with TestClient(app) as test_client:
-        # Define headers padrão com o token de autenticação
         test_client.headers.update({'Authorization': f'Bearer {admin_token}', 'Content-Type': 'application/json'})
         yield test_client

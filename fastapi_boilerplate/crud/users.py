@@ -63,7 +63,7 @@ class UserCRUD:
         Get user by ID
         """
         result = await db.execute(select(User).where(User.id == user_id).limit(1))
-        return result.scalar_one_or_none()
+        return result.scalar()
 
     @classmethod
     async def get_user_by_username(cls, db: AsyncSession, username: str) -> Optional[User]:
@@ -71,7 +71,7 @@ class UserCRUD:
         Get user by username
         """
         result = await db.execute(select(User).where(User.username == username).limit(1))
-        return result.scalar_one_or_none()
+        return result.scalar()
 
     @classmethod
     async def get_user_by_email(cls, db: AsyncSession, email: str) -> Optional[User]:
@@ -79,7 +79,7 @@ class UserCRUD:
         Get user by email
         """
         result = await db.execute(select(User).where(User.email == email).limit(1))
-        return result.scalar_one_or_none()
+        return result.scalar()
 
     @classmethod
     async def get_users(cls, db: AsyncSession, skip: int = 0, limit: int = 100) -> List[User]:
@@ -95,7 +95,7 @@ class UserCRUD:
         Get total count of Users
         """
         result = await db.execute(select(func.count()).select_from(User))
-        return result.scalar_one()
+        return result.scalar()
 
     @classmethod
     async def update_user(cls, db: AsyncSession, user_id: uuid.UUID, user_update: UserUpdate) -> Optional[User]:
