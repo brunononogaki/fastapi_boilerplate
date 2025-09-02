@@ -22,7 +22,7 @@ DATABASE_PORT=5432
 DATABASE_USER=dbusername
 DATABASE_PASSWORD=dbpassword
 DATABASE_NAME=dbname
-TEST_DATABASE_NAME=dbname_test
+DATABASE_NAME_TEST=dbname_test
 ADMIN_PASSWORD=xxxxxxx
 
 # Security
