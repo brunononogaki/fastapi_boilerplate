@@ -8,12 +8,14 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">=3.13,<4.0"
 fastapi = {extras = ["standard"], version = "^0.116.1"}
-sqlalchemy = "^2.0.43"
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.43"}
 pydantic-settings = "^2.10.1"
 psycopg = {extras = ["binary"], version = "^3.2.9"}
 pyjwt = "^2.10.1"
 pwdlib = {extras = ["argon2"], version = "^0.2.1"}
 loguru = "^0.7.3"
+asyncpg = "^0.30.0"
+httpx = "^0.28.1"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -21,6 +23,7 @@ ruff = "^0.12.11"
 pytest = "^8.4.1"
 pytest-cov = "^6.2.1"
 taskipy = "^1.14.1"
+pytest-asyncio = "^1.1.0"
 
 [build-system]
 requires = ["poetry-core"]

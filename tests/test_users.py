@@ -1,18 +1,20 @@
 from http import HTTPStatus
 from uuid import UUID
 
+import pytest
 from fastapi.testclient import TestClient
 
 from fastapi_boilerplate.app import app
 
 
-def test_users_crud_flow(client: TestClient):
+@pytest.mark.asyncio
+async def test_users_crud_flow(client):
     # Create user
     payload = {
-        'username': 'user_test_py',
-        'email': 'user_test_py@example.com',
-        'first_name': 'User',
-        'last_name': 'Py',
+        'username': 'test_user',
+        'email': 'test_user@example.com',
+        'first_name': 'Test',
+        'last_name': 'User',
         'password': 'secret123',
     }
     r = client.post('/api/v1/users/', json=payload)
@@ -20,7 +22,6 @@ def test_users_crud_flow(client: TestClient):
     data = r.json()
     assert 'id' in data
     user_id = data['id']
-    # Ensure ID is a valid UUID
     UUID(user_id)
 
     # List users (should include created)
@@ -50,23 +51,20 @@ def test_users_crud_flow(client: TestClient):
     assert r.status_code == HTTPStatus.NOT_FOUND
 
 
-def test_authentication_required(client: TestClient):
+def test_authentication_required():
     """Testa que endpoints requerem autenticação"""
-    # Criar um cliente sem autenticação
-    unauthenticated_client = TestClient(app)
+    with TestClient(app) as unauthenticated_client:
+        r = unauthenticated_client.get('/api/v1/users/')
+        assert r.status_code == HTTPStatus.UNAUTHORIZED
 
-    # Tentar acessar endpoints sem token
-    r = unauthenticated_client.get('/api/v1/users/')
-    assert r.status_code == HTTPStatus.UNAUTHORIZED
-
-    r = unauthenticated_client.post(
-        '/api/v1/users/',
-        json={
-            'username': 'test_user',
-            'email': 'test@example.com',
-            'first_name': 'Test',
-            'last_name': 'User',
-            'password': 'password123',
-        },
-    )
-    assert r.status_code == HTTPStatus.UNAUTHORIZED
+        r = unauthenticated_client.post(
+            '/api/v1/users/',
+            json={
+                'username': 'test_user',
+                'email': 'test@example.com',
+                'first_name': 'Test',
+                'last_name': 'User',
+                'password': 'password123',
+            },
+        )
+        assert r.status_code == HTTPStatus.UNAUTHORIZED

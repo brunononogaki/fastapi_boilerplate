@@ -35,7 +35,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         )
 
     # Get user from database
-    user = user_crud.get_user_by_username(db=db, username=username)
+    user = await user_crud.get_user_by_username(db=db, username=username)
 
     if user is None:
         raise HTTPException(

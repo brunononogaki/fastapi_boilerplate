@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from loguru import logger
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from fastapi_boilerplate.core.database import create_tables, engine
 from fastapi_boilerplate.core.settings import settings
@@ -10,17 +10,17 @@ from fastapi_boilerplate.crud.users import user_crud
 from fastapi_boilerplate.routers import auth, users
 
 
-def create_admin_user():
+async def create_admin_user():
     """
     Create default admin user if not created
     """
     try:
-        with Session(engine) as db:
+        async with AsyncSession(engine) as db:
             # Verifica se o admin já existe
-            existing_admin = user_crud.get_user_by_username(db, 'admin')
+            existing_admin = await user_crud.get_user_by_username(db, 'admin')
 
             if not existing_admin:
-                user_crud.create_admin(db, settings.admin_password)
+                await user_crud.create_admin(db, settings.admin_password)
             else:
                 pass
 
@@ -32,8 +32,8 @@ def create_admin_user():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    create_tables()
-    create_admin_user()
+    await create_tables()
+    await create_admin_user()
     yield
     # Shutdown
 

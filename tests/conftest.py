@@ -1,12 +1,9 @@
-from collections.abc import Generator
-
-import pytest
+import pytest_asyncio
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from fastapi_boilerplate.app import app
-from fastapi_boilerplate.core.database import get_session as real_get_session
 from fastapi_boilerplate.core.security import create_access_token
 from fastapi_boilerplate.core.settings import settings
 from fastapi_boilerplate.crud.users import user_crud
@@ -14,44 +11,41 @@ from fastapi_boilerplate.models.base import Base
 from fastapi_boilerplate.models.users import User
 
 
-@pytest.fixture
-def db_session():
+@pytest_asyncio.fixture
+async def db_session():
     database_url = settings.test_database_url
 
-    engine = create_engine(database_url)
+    engine = create_async_engine(database_url)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
 
-    Base.metadata.create_all(engine)
-    with Session(engine) as session:
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    async with AsyncSession(engine) as session:
         yield session
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
 
-    # Drop everything after running the tests
-    Base.metadata.drop_all(engine)
 
-
-@pytest.fixture
-def admin_user(db_session: Session) -> User:
+@pytest_asyncio.fixture
+async def admin_user(db_session: AsyncSession) -> User:
     """Create the default admin user"""
-    user_crud.create_admin(db_session, settings.admin_password)
-    return db_session.query(User).filter(User.username == 'admin').first()
+    await user_crud.create_admin(db_session, settings.admin_password)
+    result = await db_session.execute(select(User).filter_by(username='admin'))
+    admin = result.scalar_one_or_none()
+    return admin
 
 
-@pytest.fixture
-def admin_token(admin_user: User) -> str:
+@pytest_asyncio.fixture
+async def admin_token(admin_user: User) -> str:
     """Generate a JWT Token"""
     return create_access_token(data={'sub': admin_user.username, 'user_id': str(admin_user.id)})
 
 
-@pytest.fixture
-def client(db_session: Session, admin_token: str) -> Generator[TestClient, None, None]:
-    def override_get_session() -> Generator[Session, None, None]:
-        yield db_session
-
-    app.dependency_overrides[real_get_session] = override_get_session
-
-    # Criar um cliente com headers de autenticação padrão
-    with TestClient(app) as c:
-        # Configurar headers padrão com o token admin
-        c.headers.update({'Authorization': f'Bearer {admin_token}'})
-        yield c
-
-    app.dependency_overrides.clear()
+@pytest_asyncio.fixture
+async def client(admin_token: str):
+    """Create a TestClient with authenticated headers"""
+    with TestClient(app) as test_client:
+        # Define headers padrão com o token de autenticação
+        test_client.headers.update({'Authorization': f'Bearer {admin_token}', 'Content-Type': 'application/json'})
+        yield test_client

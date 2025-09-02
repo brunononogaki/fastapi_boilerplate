@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from fastapi_boilerplate.core.security import get_password_hash, verify_password
 from fastapi_boilerplate.models.users import User
@@ -12,7 +12,7 @@ from fastapi_boilerplate.schemas.users import UserCreate, UserUpdate
 
 class UserCRUD:
     @classmethod
-    def create_admin(cls, db: Session, admin_password) -> User:
+    async def create_admin(cls, db: AsyncSession, admin_password) -> User:
         """
         Create default admin user
         """
@@ -25,18 +25,17 @@ class UserCRUD:
             password=password,
             is_admin=True,
         )
-
         try:
             db.add(db_user)
-            db.commit()
-            db.refresh(db_user)
+            await db.commit()
+            await db.refresh(db_user)
             return db_user
         except IntegrityError:
-            db.rollback()
+            await db.rollback()
             raise ValueError('Admin account already exists')
 
     @classmethod
-    def create_user(cls, db: Session, user_create: UserCreate) -> User:
+    async def create_user(cls, db: AsyncSession, user_create: UserCreate) -> User:
         """
         Create a new user
         """
@@ -49,109 +48,104 @@ class UserCRUD:
             password=password,
             is_admin=user_create.is_admin,
         )
-
         try:
             db.add(db_user)
-            db.commit()
-            db.refresh(db_user)
+            await db.commit()
+            await db.refresh(db_user)
             return db_user
         except IntegrityError:
-            db.rollback()
+            await db.rollback()
             raise ValueError('Username or email already exists')
 
     @classmethod
-    def get_user_by_id(cls, db: Session, user_id: uuid.UUID) -> Optional[User]:
+    async def get_user_by_id(cls, db: AsyncSession, user_id: uuid.UUID) -> Optional[User]:
         """
         Get user by ID
         """
-        return db.scalar(select(User).where(User.id == user_id).limit(1))
+        result = await db.execute(select(User).where(User.id == user_id).limit(1))
+        return result.scalar_one_or_none()
 
     @classmethod
-    def get_user_by_username(cls, db: Session, username: str) -> Optional[User]:
+    async def get_user_by_username(cls, db: AsyncSession, username: str) -> Optional[User]:
         """
         Get user by username
         """
-        return db.scalar(select(User).where(User.username == username).limit(1))
+        result = await db.execute(select(User).where(User.username == username).limit(1))
+        return result.scalar_one_or_none()
 
     @classmethod
-    def get_user_by_email(cls, db: Session, email: str) -> Optional[User]:
+    async def get_user_by_email(cls, db: AsyncSession, email: str) -> Optional[User]:
         """
         Get user by email
         """
-        return db.scalar(select(User).where(User.email == email).limit(1))
+        result = await db.execute(select(User).where(User.email == email).limit(1))
+        return result.scalar_one_or_none()
 
     @classmethod
-    def get_users(cls, db: Session, skip: int = 0, limit: int = 100) -> List[User]:
+    async def get_users(cls, db: AsyncSession, skip: int = 0, limit: int = 100) -> List[User]:
         """
         Get list of users with pagination, ordered by username
         """
-        return db.scalars(select(User).order_by(User.username).offset(skip).limit(limit))
+        result = await db.execute(select(User).order_by(User.username).offset(skip).limit(limit))
+        return result.scalars().all()
 
     @classmethod
-    def get_users_count(cls, db: Session) -> int:
+    async def get_users_count(cls, db: AsyncSession) -> int:
         """
         Get total count of Users
         """
-        return db.scalar(select(func.count()).select_from(User))
+        result = await db.execute(select(func.count()).select_from(User))
+        return result.scalar_one()
 
     @classmethod
-    def update_user(cls, db: Session, user_id: uuid.UUID, user_update: UserUpdate) -> Optional[User]:
+    async def update_user(cls, db: AsyncSession, user_id: uuid.UUID, user_update: UserUpdate) -> Optional[User]:
         """
         Update user information
         """
-        db_user = cls.get_user_by_id(db, user_id)
+        db_user = await cls.get_user_by_id(db, user_id)
         if not db_user:
             return None
-
         # Protect admin user from losing admin privileges
         if db_user.username == 'admin' and hasattr(user_update, 'is_admin') and user_update.is_admin is False:
             raise ValueError('Cannot remove admin privileges from the default admin user')
-
         update_data = user_update.dict(exclude_unset=True)
-
         # Protect admin user from losing admin privileges (additional check for dict access)
         if db_user.username == 'admin' and 'is_admin' in update_data and update_data['is_admin'] is False:
             raise ValueError('Cannot remove admin privileges from the default admin user')
-
         # Hash password if provided
         if 'password' in update_data:
             update_data['password'] = get_password_hash(update_data.pop('password'))
-
         try:
             for field, value in update_data.items():
                 setattr(db_user, field, value)
-
-            db.commit()
-            db.refresh(db_user)
+            await db.commit()
+            await db.refresh(db_user)
             return db_user
         except IntegrityError:
-            db.rollback()
+            await db.rollback()
             raise ValueError('Username or email already exists')
 
     @classmethod
-    def delete_user(cls, db: Session, user_id: uuid.UUID) -> bool:
+    async def delete_user(cls, db: AsyncSession, user_id: uuid.UUID) -> bool:
         """
         Delete user by ID
         """
-        db_user = cls.get_user_by_id(db, user_id)
+        db_user = await cls.get_user_by_id(db, user_id)
         if not db_user:
             return False
-
         # Protect admin user from being deleted
         if db_user.username == 'admin':
             raise ValueError('Cannot delete the default admin user')
-
-        db.delete(db_user)
-        db.commit()
+        await db.delete(db_user)
+        await db.commit()
         return True
 
     @classmethod
-    def authenticate_user(cls, db: Session, username: str, password: str) -> Optional[User]:
+    async def authenticate_user(cls, db: AsyncSession, username: str, password: str) -> Optional[User]:
         """
         Authenticate user with username and password
         """
-        user = cls.get_user_by_username(db, username)
-
+        user = await cls.get_user_by_username(db, username)
         if not user:
             return None
         if not verify_password(password, user.password):

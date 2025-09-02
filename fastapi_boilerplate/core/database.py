@@ -1,17 +1,17 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from fastapi_boilerplate import models  # noqa: F401
 from fastapi_boilerplate.core.settings import settings
 from fastapi_boilerplate.models.base import Base
 
-engine = create_engine(settings.database_url)
+engine = create_async_engine(settings.database_url)
 
 
-def get_session():
-    with Session(engine) as session:
+async def get_session():
+    async with AsyncSession(engine) as session:
         yield session
 
 
-def create_tables():
-    Base.metadata.create_all(engine)
+async def create_tables():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
