@@ -36,14 +36,6 @@ class Settings(BaseSettings):
 
     @property
     def database_url(self) -> Optional[str]:
-        if not all([
-            self.database_host,
-            self.database_port,
-            self.database_user,
-            self.database_password,
-            self.database_name,
-        ]):
-            return None
         return (
             f'postgresql+psycopg://{self.database_user}:{self.database_password}'
             f'@{self.database_host}:{self.database_port}/{self.database_name}'
@@ -51,14 +43,6 @@ class Settings(BaseSettings):
 
     @property
     def database_url_test(self) -> Optional[str]:
-        if not all([
-            self.database_host,
-            self.database_port,
-            self.database_user,
-            self.database_password,
-            self.database_name_test,
-        ]):
-            return None
         return (
             f'postgresql+psycopg://{self.database_user}:{self.database_password}'
             f'@{self.database_host}:{self.database_port}/{self.database_name_test}'

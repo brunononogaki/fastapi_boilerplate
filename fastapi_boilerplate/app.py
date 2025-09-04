@@ -10,7 +10,7 @@ from fastapi_boilerplate.crud.users import user_crud
 from fastapi_boilerplate.routers import auth, users
 
 
-def create_admin_user():
+def create_admin_user():  # pragma: no cover
     """
     Create default admin user if not created
     """

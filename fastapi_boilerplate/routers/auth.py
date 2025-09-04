@@ -4,10 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
+from fastapi_boilerplate.core.auth import get_current_admin_user, get_current_user
 from fastapi_boilerplate.core.database import get_session
 from fastapi_boilerplate.core.security import create_access_token
 from fastapi_boilerplate.core.settings import settings
 from fastapi_boilerplate.crud.users import user_crud
+from fastapi_boilerplate.models.users import User
 from fastapi_boilerplate.schemas.auth import TokenResponse
 
 router = APIRouter()
@@ -37,3 +39,13 @@ async def login(login_data: OAuth2PasswordRequestForm = Depends(), db: Session =
     return TokenResponse(
         access_token=access_token, token_type='bearer', expires_in=settings.access_token_expire_minutes
     )
+
+
+@router.get('/auth/user')
+async def get_current_user_test(current_user: User = Depends(get_current_user)):
+    return {'username': current_user.username}
+
+
+@router.get('/auth/admin')
+async def get_current_admin_user_test(current_admin: User = Depends(get_current_admin_user)):
+    return {'username': current_admin.username, 'is_admin': current_admin.is_admin}

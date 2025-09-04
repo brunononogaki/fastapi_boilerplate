@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from fastapi_boilerplate.core.auth import get_current_admin_user
+from fastapi_boilerplate.core.auth import get_current_admin_user, get_current_user
 from fastapi_boilerplate.core.database import get_session
 from fastapi_boilerplate.crud.users import user_crud
 from fastapi_boilerplate.models.users import User
@@ -71,8 +71,16 @@ async def patch_user(
     user_id: UUID,
     payload: UserUpdate,
     db: Session = Depends(get_session),
-    current_user: User = Depends(get_current_admin_user),
+    current_user: User = Depends(get_current_user),
 ):
+    # Only admin and the user can change its own data
+    if user_id != current_user.id and not current_user.is_admin:
+        raise HTTPException(status_code=401, detail='user unauthorized')
+
+    # User is not allowed to make himself admin
+    if payload.is_admin is not None and not current_user.is_admin:
+        raise HTTPException(status_code=401, detail='user unauthorized')
+
     user = user_crud.get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail='user not found')
