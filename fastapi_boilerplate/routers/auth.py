@@ -41,6 +41,17 @@ async def login(login_data: OAuth2PasswordRequestForm = Depends(), db: Session =
     )
 
 
+@router.post('/auth/refresh_token', response_model=TokenResponse)
+async def refresh_access_token(user: User = Depends(get_current_user)):
+    """
+    Refresh JWT Token
+    """
+    new_access_token = create_access_token(data={'sub': user.email})
+    return TokenResponse(
+        access_token=new_access_token, token_type='bearer', expires_in=settings.access_token_expire_minutes
+    )
+
+
 @router.get('/auth/user')
 async def get_current_user_test(current_user: User = Depends(get_current_user)):
     return {'username': current_user.username}
