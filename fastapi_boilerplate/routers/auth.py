@@ -1,4 +1,5 @@
 from datetime import timedelta
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -14,9 +15,14 @@ from fastapi_boilerplate.schemas.auth import TokenResponse
 
 router = APIRouter()
 
+Session = Annotated[Session, Depends(get_session)]
+CurrentUser = Annotated[User, Depends(get_current_user)]
+CurrentAdminUser = Annotated[User, Depends(get_current_admin_user)]
+OAuth2Form = Annotated[OAuth2PasswordRequestForm, Depends()]
+
 
 @router.post('/auth/login', response_model=TokenResponse)
-async def login(login_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_session)):
+async def login(db: Session, login_data: OAuth2Form):
     """
     Authenticate user and return JWT token
     """
@@ -42,7 +48,7 @@ async def login(login_data: OAuth2PasswordRequestForm = Depends(), db: Session =
 
 
 @router.post('/auth/refresh_token', response_model=TokenResponse)
-async def refresh_access_token(user: User = Depends(get_current_user)):
+async def refresh_access_token(user: CurrentUser):
     """
     Refresh JWT Token
     """
@@ -53,10 +59,10 @@ async def refresh_access_token(user: User = Depends(get_current_user)):
 
 
 @router.get('/auth/user')
-async def get_current_user_test(current_user: User = Depends(get_current_user)):
+async def get_current_user_test(current_user: CurrentUser):
     return {'username': current_user.username}
 
 
 @router.get('/auth/admin')
-async def get_current_admin_user_test(current_admin: User = Depends(get_current_admin_user)):
+async def get_current_admin_user_test(current_admin: CurrentAdminUser):
     return {'username': current_admin.username, 'is_admin': current_admin.is_admin}

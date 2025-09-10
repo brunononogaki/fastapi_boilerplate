@@ -18,3 +18,8 @@ class PaginatedResponse(BaseModel, Generic[T]):
     total_pages: int = Field(..., description='Total number of pages')
     has_next: bool = Field(..., description='Whether there are more pages')
     has_previous: bool = Field(..., description='Whether there are previous pages')
+
+
+class FilterPage(BaseModel):
+    skip: int = Field(ge=0)
+    limit: int = Field(ge=1, le=200)
