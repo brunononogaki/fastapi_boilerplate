@@ -21,5 +21,5 @@ class PaginatedResponse(BaseModel, Generic[T]):
 
 
 class FilterPage(BaseModel):
-    skip: int = Field(ge=0)
-    limit: int = Field(ge=1, le=200)
+    skip: int = Field(ge=0, default=0)
+    limit: int = Field(ge=1, le=200, default=100)
