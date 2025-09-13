@@ -21,6 +21,7 @@ ruff = "^0.12.11"
 pytest = "^8.4.1"
 pytest-cov = "^6.2.1"
 taskipy = "^1.14.1"
+testcontainers = "^4.13.0"
 
 [build-system]
 requires = ["poetry-core"]

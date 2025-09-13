@@ -4,21 +4,23 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
+from testcontainers.postgres import PostgresContainer
 
 from fastapi_boilerplate.app import app
 from fastapi_boilerplate.core.database import get_session
-
-# from fastapi_boilerplate.app import app
-# from fastapi_boilerplate.core.database import get_session
-# from fastapi_boilerplate.core.security import create_access_token
 from fastapi_boilerplate.core.settings import settings
 from fastapi_boilerplate.models.base import Base
 
 
-@pytest.fixture
-def db_session():
-    engine = create_engine(settings.database_url_test)
+@pytest.fixture(scope='session')
+def engine():
+    with PostgresContainer('postgres:17', driver='psycopg') as postgres:
+        _engine = create_engine(postgres.get_connection_url())
+        yield _engine
 
+
+@pytest.fixture
+def db_session(engine):
     # Drop Database when starting the tests
     Base.metadata.drop_all(engine)
 
