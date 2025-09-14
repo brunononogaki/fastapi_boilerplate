@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from fastapi_boilerplate.core.database import create_tables, engine
 from fastapi_boilerplate.core.settings import settings
 from fastapi_boilerplate.crud.users import user_crud
-from fastapi_boilerplate.routers import auth, users
+from fastapi_boilerplate.routers import auth, health, users
 
 
 def create_admin_user():  # pragma: no cover
@@ -48,16 +48,22 @@ app = FastAPI(
     },
 )
 
+app_test_env = FastAPI(
+    title='FastAPI Boilerplate',
+    description='My basic API',
+    version='1.0.0',
+    swagger_ui_parameters={
+        'persistAuthorization': True,
+    },
+)
+
+
 # Routers
-app.include_router(auth.router, prefix='/api/v1', tags=['authentication'])
-app.include_router(users.router, prefix='/api/v1', tags=['users'])
+def register_routers(app):
+    app.include_router(health.router, prefix='/api/v1', tags=['health'])
+    app.include_router(auth.router, prefix='/api/v1', tags=['authentication'])
+    app.include_router(users.router, prefix='/api/v1', tags=['users'])
 
 
-@app.get('/')
-async def root():
-    return {'message': 'API is running'}
-
-
-@app.get('/health')
-async def health_check():
-    return {'status': 'healthy'}
+register_routers(app)
+register_routers(app_test_env)

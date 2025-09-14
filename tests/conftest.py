@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from testcontainers.postgres import PostgresContainer
 
-from fastapi_boilerplate.app import app
+from fastapi_boilerplate.app import app_test_env
 from fastapi_boilerplate.core.database import get_session
 from fastapi_boilerplate.core.settings import settings
 from fastapi_boilerplate.models.base import Base
@@ -40,8 +40,8 @@ def client(db_session: Session):
     """Create a TestClient with authenticated headers"""
 
     # Override session to use the Test DB
-    app.dependency_overrides[get_session] = lambda: db_session
-    with TestClient(app) as test_client:
+    app_test_env.dependency_overrides[get_session] = lambda: db_session
+    with TestClient(app_test_env) as test_client:
         yield test_client
 
 
