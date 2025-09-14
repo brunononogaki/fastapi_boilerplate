@@ -1,10 +1,12 @@
 
-name: pipeline
-on:
+name: run_tests
+on: 
   push:
     branches:
       - main
   pull_request:
+    branches:
+      - main  
   workflow_call:
     secrets:
       DATABASE_HOST:
@@ -42,19 +44,19 @@ jobs:
       ACCESS_TOKEN_EXPIRE_MINUTES: ${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }}
 
     steps:
-      - name: Copia os arquivos do repositório
+      - name: "Download code"
         uses: actions/checkout@v4
 
-      - name: Instalar o python
+      - name: "Install Python 3.13"
         uses: actions/setup-python@v5
         with:
           python-version: '3.13'    
 
-      - name: Instalar o poetry
+      - name: "Install Poetry"
         run: pipx install poetry
 
-      - name: Instalar dependências
+      - name: "Install dependencies"
         run: poetry install
 
-      - name: Executar testes
+      - name: "Run tests"
         run: poetry run task test
