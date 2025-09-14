@@ -1,5 +1,30 @@
+
 name: pipeline
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_call:
+    secrets:
+      DATABASE_HOST:
+        required: true
+      DATABASE_PORT:
+        required: true
+      POSTGRES_USER:
+        required: true
+      POSTGRES_PASSWORD:
+        required: true
+      POSTGRES_DB:
+        required: true
+      ADMIN_PASSWORD:
+        required: true
+      SECRET_KEY:
+        required: true
+      ALGORITHM:
+        required: true
+      ACCESS_TOKEN_EXPIRE_MINUTES:
+        required: true
 
 jobs:
   test:
