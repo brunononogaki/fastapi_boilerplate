@@ -1,0 +1,25 @@
+name: deploy_to_vcs
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  run_tests:
+    uses: ./.github/workflows/test.yml
+              
+  build_deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Download code"
+        uses: actions/checkout@v4
+
+      - name: "Copy files to VPS"
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "."
+          target: "~/fastapi_boilerplate"
