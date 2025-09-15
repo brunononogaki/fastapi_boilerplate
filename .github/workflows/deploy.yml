@@ -40,6 +40,7 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
             cd ~/fastapi_boilerplate
+            rm .env
             echo "DATABASE_HOST=${{ secrets.DATABASE_HOST }}" >> .env
             echo "DATABASE_PORT=${{ secrets.DATABASE_PORT }}" >> .env
             echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
