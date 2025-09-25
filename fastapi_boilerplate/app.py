@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -8,6 +9,8 @@ from fastapi_boilerplate.core.database import create_tables, engine
 from fastapi_boilerplate.core.settings import settings
 from fastapi_boilerplate.crud.users import user_crud
 from fastapi_boilerplate.routers import auth, health, users
+
+origins = settings.cors_origins
 
 
 def create_admin_user():  # pragma: no cover
@@ -60,6 +63,16 @@ app_test_env = FastAPI(
 
 # Routers
 def register_routers(app):
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors,
+        allow_credentials=True,
+        allow_methods=['*'],
+        allow_headers=['*'],
+        expose_headers=['*'],
+        max_age=86400,  # 24 hours
+    )
+
     app.include_router(health.router, prefix='/api/v1', tags=['health'])
     app.include_router(auth.router, prefix='/api/v1', tags=['authentication'])
     app.include_router(users.router, prefix='/api/v1', tags=['users'])

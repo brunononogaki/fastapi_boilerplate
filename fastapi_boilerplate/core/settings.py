@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -18,17 +18,8 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     admin_password: Optional[str] = None
 
-    # CORS settings (accept str or list from env)
-    cors_origins: Union[List[str], str, None] = [
-        'http://localhost:3000',
-        'http://localhost:5173',
-        'http://localhost:5174',
-        'http://127.0.0.1:3000',
-        'http://127.0.0.1:5173',
-        'http://127.0.0.1:5174',
-        'http://localhost:8080',
-        'http://127.0.0.1:8080',
-    ]
+    # CORS settings
+    cors_origins: Optional[str] = None
 
     @property
     def database_url(self) -> Optional[str]:
@@ -36,6 +27,10 @@ class Settings(BaseSettings):
             f'postgresql+psycopg://{self.postgres_user}:{self.postgres_password}'
             f'@{self.database_host}:{self.database_port}/{self.postgres_db}'
         )
+
+    @property
+    def cors(self) -> Optional[str]:
+        return self.cors_origins.split(',')
 
 
 settings = Settings()
