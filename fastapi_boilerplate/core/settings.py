@@ -30,7 +30,9 @@ class Settings(BaseSettings):
 
     @property
     def cors(self) -> Optional[str]:
-        return self.cors_origins.split(',')
+        if self.cors_origins:
+            return self.cors_origins.split(',')
+        return []
 
 
 settings = Settings()
